@@ -20,7 +20,7 @@ resource "google_compute_firewall" "firewall_rules" {
 
   allow {
     protocol = "tcp"
-    ports    = ["80", "8080", "3000", "3001", "3002" ,"22"]
+    ports    = ["80", "8080", "3000", "3001", "3002", "3003" ,"22"]
   }
 
   direction     = "INGRESS"
