@@ -1,12 +1,17 @@
-# cloudbuild.yaml
+options:
+  logging: CLOUD_LOGGING_ONLY
+# Uncomment and fill in the line below to specify a logs bucket explicitly.
+  logsBucket: 'gs://devoteam-app/'
 
 steps:
   - id: 'terraform init'
     name: 'hashicorp/terraform:1.0.0'
     script: terraform init
+
   - id: 'terraform plan'
     name: 'hashicorp/terraform:1.0.0'
     script: terraform plan
+
   - id: 'terraform apply'
     name: 'hashicorp/terraform:1.0.0'
     script: terraform apply --auto-approve
