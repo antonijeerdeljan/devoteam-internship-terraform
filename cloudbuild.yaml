@@ -4,12 +4,12 @@ options:
   logging: CLOUD_LOGGING_ONLY
 
 steps:
-  - id: 'terraform destroy'
-    name: 'hashicorp/terraform:1.0.0'
-    script: terraform destroy --auto-approve
   - id: 'terraform init'
     name: 'hashicorp/terraform:1.0.0'
     script: terraform init -reconfigure
+  - id: 'terraform destroy'
+    name: 'hashicorp/terraform:1.0.0'
+    script: terraform destroy --auto-approve
   - id: 'terraform plan'
     name: 'hashicorp/terraform:1.0.0'
     script: terraform plan
