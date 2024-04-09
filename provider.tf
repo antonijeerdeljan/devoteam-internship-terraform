@@ -7,7 +7,7 @@ terraform {
   }
 
   backend "gcs" {
-    bucket = "devoteam-app"
+    bucket = "devoteam-terraform-state"
     prefix  = "terraform/state"
   }
 
