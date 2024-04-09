@@ -1,6 +1,11 @@
 resource "google_compute_network" "project_vpc" {
   name                    = "network"
   auto_create_subnetworks = false
+
+  lifecycle {
+    create_before_destroy = true
+  }
+
 }
 
 resource "google_compute_subnetwork" "project_subnet_us_central" {
@@ -8,9 +13,19 @@ resource "google_compute_subnetwork" "project_subnet_us_central" {
   ip_cidr_range = "10.0.0.0/24"
   network       = google_compute_network.project_vpc.id
   region        = var.region
+
+  lifecycle {
+    create_before_destroy = true
+  }
+
 }
 
 resource "google_compute_firewall" "firewall_rules" {
+
+  lifecycle {
+    create_before_destroy = true
+  }
+
   name    = "firewall1"
   network = google_compute_network.project_vpc.id
 
@@ -43,6 +58,10 @@ resource "google_compute_instance_template" "devoteam-vm" {
     access_config {
       // Assigns an ephemeral IP address
     }
+  }
+
+  lifecycle {
+    create_before_destroy = true
   }
 
   disk {
@@ -78,6 +97,10 @@ resource "google_compute_instance_group_manager" "devoteam-vm-group" {
   base_instance_name = "task1-vm1"
   target_size        = 2
 
+  lifecycle {
+    create_before_destroy = true
+  }
+
     
 
 }
@@ -92,6 +115,11 @@ resource "google_compute_health_check" "devoteam-health-check" {
     proxy_header       = "NONE"
     request_path       = "/"
   }
+
+  lifecycle {
+    create_before_destroy = true
+  }
+
 }
 
 resource "google_compute_backend_service" "devoteam-load-balancer" {
@@ -108,16 +136,31 @@ resource "google_compute_backend_service" "devoteam-load-balancer" {
     balancing_mode  = "UTILIZATION"
     capacity_scaler = 1.0
   }
+
+  lifecycle {
+    create_before_destroy = true
+  }
+
 }
 
 resource "google_compute_url_map" "url-mapper" {
   name            = "http-mapping"
   default_service = google_compute_backend_service.devoteam-load-balancer.id
+
+  lifecycle {
+    create_before_destroy = true
+  }
+
 }
 
 resource "google_compute_target_http_proxy" "proxy" {
   name    = "proxy-mapper"
   url_map = google_compute_url_map.url-mapper.id
+
+  lifecycle {
+    create_before_destroy = true
+  }
+
 }
 
 resource "google_compute_global_forwarding_rule" "forward" {
@@ -126,5 +169,10 @@ resource "google_compute_global_forwarding_rule" "forward" {
   load_balancing_scheme = "EXTERNAL_MANAGED"
   port_range            = "3000"
   target                = google_compute_target_http_proxy.proxy.id
+
+  lifecycle {
+    create_before_destroy = true
+  }
+
 }
 
