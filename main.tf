@@ -1,5 +1,5 @@
 resource "google_compute_network" "project_vpc" {
-  name                    = "network"
+  name                    = "network2"
   auto_create_subnetworks = false
 
   lifecycle {
