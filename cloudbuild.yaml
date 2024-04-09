@@ -6,5 +6,5 @@ options:
 steps:
   - id: 'terraform destroy'
     name: 'hashicorp/terraform:1.0.0'
-    script: terraform destory --auto-approve
+    script: terraform destroy --auto-approve
   
