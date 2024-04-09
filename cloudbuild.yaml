@@ -1,23 +1,12 @@
-# Specify the Google Cloud Storage bucket for storing logs
-logsBucket: 'gs://devoteam-app/'
-
-# If you need to specify a service account, it should be at the top level as well
-# serviceAccount: 'projects/YOUR_PROJECT_ID/serviceAccounts/YOUR_SERVICE_ACCOUNT_EMAIL'
-
-options:
-  # Set the logging option. If you're using a custom logs bucket, you might not need to change logging settings.
-  # This example sets Cloud Logging for storing logs. Remove or adjust according to your needs.
-  logging: CLOUD_LOGGING_ONLY
+# cloudbuild.yaml
 
 steps:
   - id: 'terraform init'
     name: 'hashicorp/terraform:1.0.0'
     script: terraform init
-
   - id: 'terraform plan'
     name: 'hashicorp/terraform:1.0.0'
     script: terraform plan
-
   - id: 'terraform apply'
     name: 'hashicorp/terraform:1.0.0'
     script: terraform apply --auto-approve
