@@ -1,5 +1,3 @@
-# cloudbuild.yaml
-
 options:
   logging: CLOUD_LOGGING_ONLY
 
@@ -10,16 +8,7 @@ steps:
     # Optional: Specify working directory if not in root
     # dir: 'terraform/'
 
-  - id: 'Terraform Plan'
+  - id: 'Terraform Destroy'
     name: 'hashicorp/terraform:latest'
-    args: ['plan', '-out=plan.tfout']
-
-  - id: 'Terraform Apply'
-    name: 'hashicorp/terraform:latest'
-    args: ['apply', 'plan.tfout']
-    # This step now proceeds without waiting for manual approval.
-
-artifacts:
-  objects:
-    location: 'gs://devoteam-app/'
-    paths: ['plan.tfout']
+    args: ['destroy', '-auto-approve']
+    # Automatically approves destruction without interactive confirmation
