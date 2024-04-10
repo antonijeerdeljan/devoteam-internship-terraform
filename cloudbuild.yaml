@@ -13,19 +13,13 @@ steps:
   - id: 'Terraform Plan'
     name: 'hashicorp/terraform:latest'
     args: ['plan', '-out=plan.tfout']
-    # Capture plan output for review
-    artifacts:
-      objects:
-        location: 'gs://devoteam-app/'
-        paths: ['plan.tfout']
-
-  # Example manual approval step (hypothetical, implement according to your CI/CD tool's capabilities)
-  - id: 'Await Approval'
-    name: 'gcr.io/cloud-builders/gcloud'
-    args: ['builds', 'submit', '--config=cloudbuild-approval.yaml']
-    waitFor: ['-']
 
   - id: 'Terraform Apply'
     name: 'hashicorp/terraform:latest'
     args: ['apply', 'plan.tfout']
-    # Ensure this step only runs after manual approval for sensitive environments
+    # This step now proceeds without waiting for manual approval.
+
+artifacts:
+  objects:
+    location: 'gs://devoteam-app/'
+    paths: ['plan.tfout']
