@@ -23,7 +23,7 @@ resource "google_compute_firewall" "firewall_rules" {
 
   allow {
     protocol = "tcp"
-    ports    = ["80", "8080", "3000", "3001", "3002", "3003" ,"22"]
+    ports    = ["80","22"]
   }
 
   direction     = "INGRESS"
@@ -127,8 +127,6 @@ resource "google_compute_backend_service" "devoteam-load-balancer" {
 resource "google_compute_url_map" "url-mapper" {
   name            = "http-mapping-${formatdate("YYYYMMDDHHmmss", timestamp())}"
   default_service = google_compute_backend_service.devoteam-load-balancer.id
-
-
 }
 
 resource "google_compute_target_http_proxy" "proxy" {
