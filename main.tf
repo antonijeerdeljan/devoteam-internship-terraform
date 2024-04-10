@@ -141,7 +141,7 @@ resource "google_compute_target_http_proxy" "proxy" {
 resource "google_compute_global_forwarding_rule" "forward" {
   name                  = "content-rule-${formatdate("YYYYMMDDHHmmss", timestamp())}"
   ip_protocol           = "TCP"
-  load_balancing_scheme = "EXTERNAL"
+  load_balancing_scheme = "EXTERNAL_MANAGED"
   port_range            = "80"
   target                = google_compute_target_http_proxy.proxy.id
 }
