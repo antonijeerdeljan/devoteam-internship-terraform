@@ -9,12 +9,13 @@ steps:
     args: ['init']
     # Optional: Specify working directory if not in root
     # dir: 'terraform/'
-  - id: 'Terraform Destroy'
+  - id: 'Terraform Plan'
     name: 'hashicorp/terraform:latest'
-    args: ['destroy', '-auto-approve']
-  # Optional: Specify working directory if not in root
-  # dir: 'terraform/'
+    args: ['plan', '-out=plan.tfout']
 
+  - id: 'Terraform Apply'
+    name: 'hashicorp/terraform:latest'
+    args: ['apply', 'plan.tfout']
     # This step now proceeds without waiting for manual approval.
 
 artifacts:
