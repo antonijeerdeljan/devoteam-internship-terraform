@@ -97,7 +97,7 @@ resource "google_compute_health_check" "devoteam-health-check" {
   check_interval_sec  = 5
   unhealthy_threshold = 2
   http_health_check {
-    port               = 3000
+    port               = 80
     port_specification = "USE_FIXED_PORT"
     proxy_header       = "NONE"
     request_path       = "/"
@@ -141,7 +141,7 @@ resource "google_compute_target_http_proxy" "proxy" {
 resource "google_compute_global_forwarding_rule" "forward" {
   name                  = "content-rule-${formatdate("YYYYMMDDHHmmss", timestamp())}"
   ip_protocol           = "TCP"
-  load_balancing_scheme = "EXTERNAL_MANAGED"
+  load_balancing_scheme = "EXTERNAL"
   port_range            = "80"
   target                = google_compute_target_http_proxy.proxy.id
 }
