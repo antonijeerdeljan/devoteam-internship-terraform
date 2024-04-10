@@ -1,12 +1,12 @@
 resource "google_compute_network" "project_vpc" {
-  name                    = "network3"
+  name = "network-${formatdate("YYYYMMDDHHmmss", timestamp())}"
   auto_create_subnetworks = false
-
 }
 
+
 resource "google_compute_subnetwork" "project_subnet_us_central" {
-  name          = "subnet"
-  ip_cidr_range = "10.0.0.0/24"
+  name = "subnet-${formatdate("YYYYMMDDHHmmss", timestamp())}"
+  ip_cidr_range = "10.10.0.0/24"
   network       = google_compute_network.project_vpc.id
   region        = var.region
 
@@ -14,7 +14,7 @@ resource "google_compute_subnetwork" "project_subnet_us_central" {
 
 resource "google_compute_firewall" "firewall_rules" {
 
-  name    = "firewall1"
+  name = "firewall-${formatdate("YYYYMMDDHHmmss", timestamp())}"
   network = google_compute_network.project_vpc.id
 
   allow {
@@ -50,7 +50,7 @@ resource "google_compute_instance_template" "devoteam-vm" {
   disk {
     auto_delete  = true
     boot         = true
-    device_name  = "disk"
+    device_name  = "disk-${formatdate("YYYYMMDDHHmmss", timestamp())}"
     source_image = "projects/debian-cloud/global/images/debian-12-bookworm-v20240312"
     mode         = "READ_WRITE"
   }
@@ -70,24 +70,30 @@ resource "google_compute_instance_template" "devoteam-vm" {
 
 
 resource "google_compute_instance_group_manager" "devoteam-vm-group" {
-  name = "instance-manager"
+  name = "instance-manager-${formatdate("YYYYMMDDHHmmss", timestamp())}"
   zone = var.zone
+
   named_port {
     name = "http"
     port = 3000
   }
+
   version {
     instance_template = google_compute_instance_template.devoteam-vm.id
     name              = "primary"
   }
-  base_instance_name = "task1-vm1"
+
+  base_instance_name = "vm"
   target_size        = 2
 
+  lifecycle {
+    create_before_destroy = true
+  }
 
 }
 
 resource "google_compute_health_check" "devoteam-health-check" {
-  name                = "health-check"
+  name                = "health-check-${formatdate("YYYYMMDDHHmmss", timestamp())}"
   check_interval_sec  = 5
   unhealthy_threshold = 2
   http_health_check {
@@ -101,7 +107,7 @@ resource "google_compute_health_check" "devoteam-health-check" {
 }
 
 resource "google_compute_backend_service" "devoteam-load-balancer" {
-  name                            = "load-balancer"
+  name                            = "load-balancer-${formatdate("YYYYMMDDHHmmss", timestamp())}"
   connection_draining_timeout_sec = 0
   health_checks                   = [google_compute_health_check.devoteam-health-check.id]
   load_balancing_scheme           = "EXTERNAL_MANAGED"
@@ -119,21 +125,21 @@ resource "google_compute_backend_service" "devoteam-load-balancer" {
 }
 
 resource "google_compute_url_map" "url-mapper" {
-  name            = "http-mapping"
+  name            = "http-mapping-${formatdate("YYYYMMDDHHmmss", timestamp())}"
   default_service = google_compute_backend_service.devoteam-load-balancer.id
 
 
 }
 
 resource "google_compute_target_http_proxy" "proxy" {
-  name    = "proxy-mapper"
+  name    = "proxy-mapper-${formatdate("YYYYMMDDHHmmss", timestamp())}"
   url_map = google_compute_url_map.url-mapper.id
 
 
 }
 
 resource "google_compute_global_forwarding_rule" "forward" {
-  name                  = "content-rule"
+  name                  = "content-rule-${formatdate("YYYYMMDDHHmmss", timestamp())}"
   ip_protocol           = "TCP"
   load_balancing_scheme = "EXTERNAL_MANAGED"
   port_range            = "3000"
