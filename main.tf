@@ -75,7 +75,7 @@ resource "google_compute_instance_group_manager" "devoteam-vm-group" {
 
   named_port {
     name = "http"
-    port = 3000
+    port = 80
   }
 
   version {
