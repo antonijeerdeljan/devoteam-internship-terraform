@@ -35,14 +35,13 @@ resource "google_compute_firewall" "firewall_rules" {
 
 
 resource "google_compute_instance_template" "devoteam-vm" {
-  name         = "vm"
+  name         = "vm-${formatdate("YYYYMMDDHHmmss", timestamp())}"
   machine_type = "e2-medium"
   region       = var.region
 
   network_interface {
     network    = google_compute_network.project_vpc.id
     subnetwork = google_compute_subnetwork.project_subnet_us_central.id
-
     access_config {
       // Assigns an ephemeral IP address
     }
@@ -56,13 +55,16 @@ resource "google_compute_instance_template" "devoteam-vm" {
     mode         = "READ_WRITE"
   }
 
-    service_account {
-    email = "cloud-internship-aerdeljan@appspot.gserviceaccount.com"
+  service_account {
+    email  = "cloud-internship-aerdeljan@appspot.gserviceaccount.com"
     scopes = ["https://www.googleapis.com/auth/cloud-platform"]
-    }
+  }
 
-    metadata_startup_script = file("docker-install.sh")
+  metadata_startup_script = file("docker-install.sh")
 
+  lifecycle {
+    create_before_destroy = true
+  }
 }
 
 
