@@ -1,146 +1,101 @@
 resource "google_compute_network" "project_vpc" {
-  name = "network-${formatdate("YYYYMMDDHHmmss", timestamp())}"
+  name                    = "${var.network_name_prefix}-${formatdate("YYYYMMDDHHmmss", timestamp())}"
   auto_create_subnetworks = false
 }
 
-
 resource "google_compute_subnetwork" "project_subnet_us_central" {
-  name = "subnet-${formatdate("YYYYMMDDHHmmss", timestamp())}"
-  ip_cidr_range = "10.10.0.0/24"
+  name          = "${var.subnet_name_prefix}-${formatdate("YYYYMMDDHHmmss", timestamp())}"
+  ip_cidr_range = var.subnet_ip_cidr_range
   network       = google_compute_network.project_vpc.id
   region        = var.region
-
 }
 
 resource "google_compute_firewall" "firewall_rules" {
-
-  name = "firewall-${formatdate("YYYYMMDDHHmmss", timestamp())}"
+  name    = "${var.firewall_name_prefix}-${formatdate("YYYYMMDDHHmmss", timestamp())}"
   network = google_compute_network.project_vpc.id
-
   allow {
-    protocol = "icmp"
+    protocol = "tcp, icmp"
+    ports    = ["80", "22"]
   }
-
-  allow {
-    protocol = "tcp"
-    ports    = ["80","22"]
-  }
-
   direction     = "INGRESS"
   source_ranges = ["0.0.0.0/0"]
-
-  priority = 1000
-
+  priority      = 1000
 }
 
-
-resource "google_compute_instance_template" "devoteam-vm" {
-  name         = "vm-${formatdate("YYYYMMDDHHmmss", timestamp())}"
-  machine_type = "e2-medium"
+resource "google_compute_instance_template" "devoteam_vm" {
+  name         = "${var.vm_template_name_prefix}-${formatdate("YYYYMMDDHHmmss", timestamp())}"
+  machine_type = var.vm_machine_type
   region       = var.region
-
   network_interface {
     network    = google_compute_network.project_vpc.id
     subnetwork = google_compute_subnetwork.project_subnet_us_central.id
-    access_config {
-      // Assigns an ephemeral IP address
-    }
   }
-
   disk {
-    auto_delete  = true
-    boot         = true
-    device_name  = "disk-${formatdate("YYYYMMDDHHmmss", timestamp())}"
-    source_image = "projects/debian-cloud/global/images/debian-12-bookworm-v20240312"
+    auto_delete = true
+    boot        = true
+    source_image = var.source_image
+    device_name  = "${var.vm_template_name_prefix}-disk-${formatdate("YYYYMMDDHHmmss", timestamp())}"
     mode         = "READ_WRITE"
   }
-
   service_account {
-    email  = "cloud-internship-aerdeljan@appspot.gserviceaccount.com"
-    scopes = ["https://www.googleapis.com/auth/cloud-platform"]
+    email  = var.service_account_email
+    scopes = var.scopes
   }
-
-  metadata_startup_script = file("docker-install.sh")
-
+  metadata_startup_script = file(var.startup_script_path)
   lifecycle {
     create_before_destroy = true
   }
 }
 
-
-
-resource "google_compute_instance_group_manager" "devoteam-vm-group" {
-  name = "instance-manager-${formatdate("YYYYMMDDHHmmss", timestamp())}"
-  zone = var.zone
-
-  named_port {
-    name = "http"
-    port = 80
-  }
-
+resource "google_compute_instance_group_manager" "devoteam_vm_group" {
+  name               = "${var.instance_group_manager_name_prefix}-${formatdate("YYYYMMDDHHmmss", timestamp())}"
+  zone               = var.zone
+  base_instance_name = var.vm_template_name_prefix
+  target_size        = var.target_size
   version {
-    instance_template = google_compute_instance_template.devoteam-vm.id
+    instance_template = google_compute_instance_template.devoteam_vm.id
     name              = "primary"
   }
-
-  base_instance_name = "vm"
-  target_size        = 2
-
+  named_port {
+    name = "http"
+    port = var.http_health_check_port
+  }
   lifecycle {
     create_before_destroy = true
   }
-
 }
 
-resource "google_compute_health_check" "devoteam-health-check" {
-  name                = "health-check-${formatdate("YYYYMMDDHHmmss", timestamp())}"
-  check_interval_sec  = 5
+resource "google_compute_health_check" "devoteam_health_check" {
+  name               = "${var.health_check_name_prefix}-${formatdate("YYYYMMDDHHmmss", timestamp())}"
+  check_interval_sec = 5
   unhealthy_threshold = 2
   http_health_check {
-    port               = 80
-    port_specification = "USE_FIXED_PORT"
-    proxy_header       = "NONE"
-    request_path       = "/"
+    port = var.http_health_check_port
   }
-
-
 }
 
-resource "google_compute_backend_service" "devoteam-load-balancer" {
-  name                            = "load-balancer-${formatdate("YYYYMMDDHHmmss", timestamp())}"
-  connection_draining_timeout_sec = 0
-  health_checks                   = [google_compute_health_check.devoteam-health-check.id]
-  load_balancing_scheme           = "EXTERNAL_MANAGED"
-  port_name                       = "http"
-  protocol                        = "HTTP"
-  session_affinity                = "NONE"
-  timeout_sec                     = 30
+resource "google_compute_backend_service" "devoteam_load_balancer" {
+  name                          = "${var.load_balancer_name_prefix}-${formatdate("YYYYMMDDHHmmss", timestamp())}"
+  health_checks                 = [google_compute_health_check.devoteam_health_check.id]
+  load_balancing_scheme         = "EXTERNAL"
+  protocol                      = "HTTP"
   backend {
-    group           = google_compute_instance_group_manager.devoteam-vm-group.instance_group
-    balancing_mode  = "UTILIZATION"
-    capacity_scaler = 1.0
+    group = google_compute_instance_group_manager.devoteam_vm_group.instance_group
   }
-
-
 }
 
-resource "google_compute_url_map" "url-mapper" {
-  name            = "http-mapping-${formatdate("YYYYMMDDHHmmss", timestamp())}"
-  default_service = google_compute_backend_service.devoteam-load-balancer.id
+resource "google_compute_url_map" "url_mapper" {
+  name            = "${var.url_map_name_prefix}-${formatdate("YYYYMMDDHHmmss", timestamp())}"
+  default_service = google_compute_backend_service.devoteam_load_balancer.id
 }
 
 resource "google_compute_target_http_proxy" "proxy" {
-  name    = "proxy-mapper-${formatdate("YYYYMMDDHHmmss", timestamp())}"
-  url_map = google_compute_url_map.url-mapper.id
-
-
+  name    = "${var.http_proxy_name_prefix}-${formatdate("YYYYMMDDHHmmss", timestamp())}"
+  url_map = google_compute_url_map.url_mapper.id
 }
 
 resource "google_compute_global_forwarding_rule" "forward" {
-  name                  = "content-rule-${formatdate("YYYYMMDDHHmmss", timestamp())}"
-  ip_protocol           = "TCP"
-  load_balancing_scheme = "EXTERNAL_MANAGED"
-  port_range            = "80"
-  target                = google_compute_target_http_proxy.proxy.id
+  name       = "${var.forwarding_rule_name_prefix}-${formatdate("YYYYMMDDHHmmss", timestamp())}"
+  target     = google_compute_target_http_proxy.proxy.id
+  port_range = "80"
 }
-
