@@ -7,16 +7,12 @@ steps:
   - id: 'Terraform Init'
     name: 'hashicorp/terraform:latest'
     args: ['init']
+    # Optional: Specify working directory if not in root
     # dir: 'terraform/'
   - id: 'Terraform Destroy'
     name: 'hashicorp/terraform:latest'
     args: ['destroy', '-auto-approve']
-
-
-  # Optional: Specify working directory if not in root
-  # dir: 'terraform'
-
-    # This step now proceeds without waiting for manual approval.
-bjects:
+    # This step now proceeds without waiting for manual approval.proval.
+objects:
     location: 'gs://devoteam-app/'
     paths: ['plan.tfout']
