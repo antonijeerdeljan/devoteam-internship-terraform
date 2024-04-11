@@ -14,7 +14,7 @@ resource "google_compute_firewall" "firewall_rules" {
   name    = "${var.firewall_name_prefix}-${formatdate("YYYYMMDDHHmmss", timestamp())}"
   network = google_compute_network.project_vpc.id
   allow {
-    protocol = ["tcp, icmp"]
+    protocol = ["tcp", "icmp"]
     ports    = ["80", "22"]
   }
   direction     = "INGRESS"
