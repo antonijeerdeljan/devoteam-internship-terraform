@@ -7,7 +7,6 @@ steps:
   - id: 'Terraform Init'
     name: 'hashicorp/terraform:latest'
     args: ['init']
-  - id: '    # Optional: Specify working directory if not in root
     # dir: 'terraform/'
   - id: 'Terraform Destroy'
     name: 'hashicorp/terraform:latest'
