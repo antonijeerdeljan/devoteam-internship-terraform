@@ -13,14 +13,11 @@ resource "google_compute_subnetwork" "project_subnet_us_central" {
 }
 
 resource "google_compute_firewall" "firewall_rules" {
-
   name = "firewall-${formatdate("YYYYMMDDHHmmss", timestamp())}"
   network = google_compute_network.project_vpc.id
-
   allow {
     protocol = "icmp"
   }
-
   allow {
     protocol = "tcp"
     ports    = ["80","22"]
@@ -28,9 +25,7 @@ resource "google_compute_firewall" "firewall_rules" {
 
   direction     = "INGRESS"
   source_ranges = ["0.0.0.0/0"]
-
   priority = 1000
-
 }
 
 
